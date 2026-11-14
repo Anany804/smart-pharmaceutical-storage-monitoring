@@ -1,0 +1,12 @@
+.env
+node_modules/
+npm-debug.log*
+data/
+node-red/data/
+firmware/.pio/
+firmware/include/config.h
+firmware/.vscode/
+.DS_Store
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

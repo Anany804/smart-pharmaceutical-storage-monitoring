@@ -1,0 +1,261 @@
+[
+  {
+    "id": "a0a1a1a1a1a1a1a1",
+    "type": "tab",
+    "label": "Pharmaceutical Storage Monitor",
+    "disabled": false,
+    "info": "REST API, SQLite, device monitoring and Dashboard 2.0."
+  },
+  {
+    "id": "100000000000000",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "POST /api/sensor-data",
+    "url": "/api/sensor-data",
+    "method": "post",
+    "upload": false,
+    "skipBodyParsing": true,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 110,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000001",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/latest",
+    "url": "/api/latest",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 165,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000002",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/history",
+    "url": "/api/history",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 220,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000003",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/score",
+    "url": "/api/score",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 275,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000004",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "POST /api/inspection",
+    "url": "/api/inspection",
+    "method": "post",
+    "upload": false,
+    "skipBodyParsing": true,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 330,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000005",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/inspections",
+    "url": "/api/inspections",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 385,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000006",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/alerts",
+    "url": "/api/alerts",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 440,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000007",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "PATCH /api/alerts/:id/acknowledge",
+    "url": "/api/alerts/:id/acknowledge",
+    "method": "patch",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 495,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000008",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/devices",
+    "url": "/api/devices",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 550,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "100000000000009",
+    "type": "http in",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "GET /api/health",
+    "url": "/api/health",
+    "method": "get",
+    "upload": false,
+    "skipBodyParsing": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 605,
+    "wires": [
+      [
+        "f0f1f1f1f1f1f1f1"
+      ]
+    ]
+  },
+  {
+    "id": "f0f1f1f1f1f1f1f1",
+    "type": "function",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "Validate, store, score and respond",
+    "func": "const service = global.get('pharmaService');\nconst result = service.handle(msg.req.method, msg.req.originalUrl || msg.req.url, msg.payload, msg.req.headers);\nmsg.statusCode = result.statusCode;\nmsg.headers = result.headers;\nmsg.payload = result.body;\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 5,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 465,
+    "y": 355,
+    "wires": [
+      [
+        "0101010101010101"
+      ]
+    ]
+  },
+  {
+    "id": "0101010101010101",
+    "type": "http response",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "JSON API response",
+    "statusCode": "",
+    "headers": {},
+    "x": 745,
+    "y": 355,
+    "wires": []
+  },
+  {
+    "id": "0303030303030303",
+    "type": "inject",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "Check device heartbeat every 15 seconds",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "15",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "2",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 155,
+    "y": 810,
+    "wires": [
+      [
+        "0202020202020202"
+      ]
+    ]
+  },
+  {
+    "id": "0202020202020202",
+    "type": "function",
+    "z": "a0a1a1a1a1a1a1a1",
+    "name": "Create and recover offline alerts",
+    "func": "const service = global.get('pharmaService');\nconst count = service.checkOffline();\nif (count > 0) node.status({ fill: 'red', shape: 'ring', text: `${count} device(s) offline` });\nelse node.status({ fill: 'green', shape: 'dot', text: 'device monitor active' });\nreturn null;\n",
+    "outputs": 0,
+    "timeout": 5,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 810,
+    "wires": []
+  }
+]

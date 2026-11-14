@@ -1,0 +1,7 @@
+// Copy of the API dispatcher embedded in flows.json for review and maintenance.
+const service = global.get('pharmaService');
+const result = service.handle(msg.req.method, msg.req.originalUrl || msg.req.url, msg.payload, msg.req.headers);
+msg.statusCode = result.statusCode;
+msg.headers = result.headers;
+msg.payload = result.body;
+return msg;

@@ -1,0 +1,108 @@
+{
+  "info": {
+    "_postman_id": "bbff77c2-baa1-4bbc-9cc7-09a67fc693ee",
+    "name": "Pharmaceutical Storage Monitoring API",
+    "description": "Exercise telemetry validation, scores, alerts and recovery, inspection records, paginated history, devices and health. Start Node-RED first. Configure baseUrl and optionally enable the sensor-ingest bearer header.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:1880" },
+    { "key": "deviceId", "value": "POSTMAN_DEMO_001" },
+    { "key": "alertId", "value": "" },
+    { "key": "ingestToken", "value": "" },
+    { "key": "dateStart", "value": "2000-01-01T00:00:00Z" },
+    { "key": "dateEnd", "value": "2099-12-31T23:59:59Z" }
+  ],
+  "item": [
+    {
+      "name": "01 · Submit nominal sensor reading",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{ingestToken}}", "disabled": true } ],
+        "body": { "mode": "raw", "raw": "{\n  \"device_id\": \"{{deviceId}}\",\n  \"temperature\": 22.5,\n  \"humidity\": 48.4,\n  \"light_raw\": 3400,\n  \"light_percentage\": 17,\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"inspection_requested\": false\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/sensor-data",
+        "description": "Expected: 201 with score breakdown; 200 if the device/timestamp key was already submitted. Enable the Authorization header and set ingestToken only when PHARMA_INGEST_TOKEN is configured."
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('created or duplicate', function () { pm.expect([200, 201]).to.include(pm.response.code); });", "pm.test('returns score result', function () { pm.expect(pm.response.json()).to.have.property('score'); });" ] } } ]
+    },
+    {
+      "name": "02 · Trigger environmental alerts",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{ingestToken}}", "disabled": true } ],
+        "body": { "mode": "raw", "raw": "{\n  \"device_id\": \"{{deviceId}}\",\n  \"temperature\": 29,\n  \"humidity\": 72,\n  \"light_raw\": 1000,\n  \"light_percentage\": 72,\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"inspection_requested\": false\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/sensor-data",
+        "description": "Expected: 201 and active temperature, humidity and light alerts. The first active temperature alert ID is stored for the next acknowledgement request."
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('unsafe reading stored', function () { pm.response.to.have.status(201); });", "const active = pm.response.json().alerts || [];", "const temperature = active.find(item => item.alert_type === 'temperature_high');", "if (temperature) pm.collectionVariables.set('alertId', temperature.alert_id);", "pm.test('threshold alerts generated', function () { pm.expect(active.length).to.be.at.least(1); });" ] } } ]
+    },
+    {
+      "name": "03 · Acknowledge active alert",
+      "request": { "method": "PATCH", "header": [], "url": "{{baseUrl}}/api/alerts/{{alertId}}/acknowledge", "description": "Expected: 200 with acknowledged=true. Run request 02 first to set alertId." },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().data.acknowledged).to.eql(true);" ] } } ]
+    },
+    {
+      "name": "04 · Recover conditions",
+      "request": {
+        "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{ingestToken}}", "disabled": true } ],
+        "body": { "mode": "raw", "raw": "{\n  \"device_id\": \"{{deviceId}}\",\n  \"temperature\": 22.5,\n  \"humidity\": 48,\n  \"light_raw\": 3400,\n  \"light_percentage\": 17,\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"inspection_requested\": false\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/sensor-data", "description": "Expected: 201; prior alerts close and recovery events are added to history."
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(201);", "pm.expect(pm.response.json().score.status).to.eql('Excellent');" ] } } ]
+    },
+    {
+      "name": "05 · Invalid sensor payload (expected 400)",
+      "request": {
+        "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{ingestToken}}", "disabled": true } ],
+        "body": { "mode": "raw", "raw": "{\n  \"device_id\": \"{{deviceId}}\",\n  \"temperature\": 100,\n  \"humidity\": 45,\n  \"light_raw\": 1500,\n  \"light_percentage\": 60\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/sensor-data", "description": "Expected: 400 VALIDATION_ERROR and one deduplicated invalid_sensor_reading alert."
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(400);", "pm.expect(pm.response.json().error.code).to.eql('VALIDATION_ERROR');" ] } } ]
+    },
+    {
+      "name": "06 · Latest reading",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/latest?device_id={{deviceId}}" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().data.device_id).to.eql(pm.collectionVariables.get('deviceId'));" ] } } ]
+    },
+    {
+      "name": "07 · Filtered history and pagination",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/history?device_id={{deviceId}}&start=2026-11-14T00:00:00Z&limit=50&offset=0", "host": [ "{{baseUrl}}" ], "path": [ "api", "history" ], "query": [ { "key": "device_id", "value": "{{deviceId}}" }, { "key": "start", "value": "2026-11-14T00:00:00Z" }, { "key": "limit", "value": "50" }, { "key": "offset", "value": "0" } ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().pagination).to.have.property('total');" ] } } ]
+    },
+    {
+      "name": "08 · Medicine Storage Score",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/score?device_id={{deviceId}}" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().score).to.have.property('temperature_score');", "pm.expect(pm.response.json().score).to.have.property('humidity_score');", "pm.expect(pm.response.json().score).to.have.property('light_score');" ] } } ]
+    },
+    {
+      "name": "09 · Create inspection request",
+      "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"device_id\": \"{{deviceId}}\",\n  \"notes\": \"Postman API smoke check\",\n  \"source\": \"postman\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/inspection" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(201);", "pm.expect(pm.response.json().data.status).to.eql('requested');" ] } } ]
+    },
+    {
+      "name": "10 · Inspection history",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/inspections?device_id={{deviceId}}&limit=20" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().data).to.be.an('array');" ] } } ]
+    },
+    {
+      "name": "11 · Active alerts",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/alerts?active=true&limit=50" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().data).to.be.an('array');" ] } } ]
+    },
+    {
+      "name": "12 · Critical alert history",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/alerts?severity=critical&start={{dateStart}}&end={{dateEnd}}&limit=50" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().data).to.be.an('array');" ] } } ]
+    },
+    {
+      "name": "13 · Devices",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/devices" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().data).to.be.an('array');" ] } } ]
+    },
+    {
+      "name": "14 · System health",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/health" },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.response.to.have.status(200);", "pm.expect(pm.response.json().database).to.eql('connected');" ] } } ]
+    }
+  ]
+}

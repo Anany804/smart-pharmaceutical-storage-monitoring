@@ -1,0 +1,23 @@
+{
+  "name": "pharmaceutical-storage-monitoring",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ESP32 and Node-RED pharmaceutical storage monitoring prototype",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "start": "bash scripts/start.sh",
+    "start:nodered:api-only": "node scripts/start-node-red-api-only.js",
+    "start:api": "node backend/server.js",
+    "simulate": "node simulator/sensor-simulator.js",
+    "build:flow": "node scripts/build-flow.js",
+    "test": "node --test tests/unit/*.test.js tests/integration/*.test.js",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:integration": "node --test tests/integration/*.test.js"
+  },
+  "dependencies": {
+    "node-red": "^5.0.9"
+  }
+}

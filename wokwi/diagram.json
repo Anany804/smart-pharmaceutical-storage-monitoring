@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "author": "Pharmaceutical Storage Monitoring System",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": -12.8, "left": 53, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht", "top": -91.2, "left": 305, "attrs": { "temperature": "24", "humidity": "48" } },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr", "top": 133.6, "left": 311, "attrs": { "lux": "100" } },
+    { "type": "wokwi-pushbutton", "id": "button", "top": 277.4, "left": 305.4, "attrs": { "color": "green", "label": "Inspection", "key": "I" } },
+    { "type": "wokwi-resistor", "id": "dht-pullup", "top": 17, "left": 235, "rotate": 90, "attrs": { "value": "10000" } }
+  ],
+  "connections": [
+    [ "dht:VCC", "esp:3V3", "red", [] ],
+    [ "dht:GND", "esp:GND.1", "black", [] ],
+    [ "dht:SDA", "esp:15", "green", [] ],
+    [ "dht-pullup:1", "esp:3V3", "red", [] ],
+    [ "dht-pullup:2", "dht:SDA", "green", [] ],
+    [ "ldr:VCC", "esp:3V3", "red", [] ],
+    [ "ldr:GND", "esp:GND.1", "black", [] ],
+    [ "ldr:AO", "esp:34", "orange", [] ],
+    [ "button:1.r", "esp:18", "blue", [] ],
+    [ "button:2.r", "esp:GND.1", "black", [] ],
+    [ "$serialMonitor:RX", "esp:TX0", "", [] ],
+    [ "$serialMonitor:TX", "esp:RX0", "", [] ]
+  ],
+  "serialMonitor": { "display": "always", "newline": "lf" }
+}

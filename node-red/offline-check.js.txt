@@ -1,0 +1,5 @@
+const service = global.get('pharmaService');
+const count = service.checkOffline();
+if (count > 0) node.status({ fill: 'red', shape: 'ring', text: `${count} device(s) offline` });
+else node.status({ fill: 'green', shape: 'dot', text: 'device monitor active' });
+return null;
